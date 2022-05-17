@@ -1,0 +1,39 @@
+ROM 	centos
+
+##############################################################################
+#	RESOLVE -  APPSTREAM ERROR
+##############################################################################
+RUN 	cd /etc/yum.repos.d/ && \
+	sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
+	sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+#############################################################################
+RUN  	yum -y update yum -y upgrage
+
+RUN 	yum -y install openssh-server
+
+#RUN 	yum -y install openssh-clients
+
+RUN 	useradd remote_user && \
+	echo "remote_user:1234" | chpasswd && \
+	mkdir /home/remote_user/.ssh && \
+	chmod 700 /home/remote_user/.ssh 
+
+#RUN 	ssh-keygen -A -q -t rsa -N '' -f /home/remote_user/.ssh/id_rsa
+
+COPY	remote-key.pub /home/remote_user/.ssh/authorized_keys
+
+RUN 	chown remote_user:remote_user -R /home/remote_user/.ssh
+
+RUN	chmod 600 /home/remote_user/.ssh/authorized_keys
+
+RUN 	systemctl enable sshd.service 
+##############################################################################
+
+RUN 	ssh-keygen -A
+
+
+CMD 	/usr/sbin/sshd -D
+
+
+###### remove the file /run/nologin in case of ssh login error
+###### rm /run/nologin   in remote_host

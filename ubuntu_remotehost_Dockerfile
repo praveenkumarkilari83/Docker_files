@@ -1,0 +1,31 @@
+FROM ubuntu
+
+RUN useradd -ms /bin/bash remote_user && echo "remote_user:1234" | chpasswd
+
+RUN apt-get update -y
+
+RUN apt install openssh-server -y
+
+USER remote_user
+
+RUN ssh-keygen -q -t rsa -N '' -f /home/remote_user/.ssh/id_rsa
+
+COPY remote-key.pub /home/remote_user/.ssh/authorized_keys
+
+USER root
+
+RUN chown remote_user:remote_user -R /home/remote_user/.ssh && \
+    chmod 600 /home/remote_user/.ssh/authorized_keys
+
+#USER remote_user
+
+RUN systemctl enable ssh
+
+#-----------------INSTALL MYSQL CLIENT-------------------------
+RUN apt-get install mysql-client -y
+
+#-----------------INSTALL PYTHON & PIP -------------------------
+RUN apt install python3.8 -y && apt install python3-pip -y 
+
+#-----------------INSTALL AWS-CLI -------------------------
+RUN pip3 install awscli --upgrade
